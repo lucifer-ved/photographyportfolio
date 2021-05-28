@@ -40,10 +40,11 @@ export const PhotoGridContainer = styled.div`
 export const Pictures = styled.img`
     height: 200px;
     flex-basis: 20%;
-    padding:10px;;
+    padding:10px;
     object-fit:contain;
     display:flex;
     flex-direction:column;
+    
 `;
 
 export const PhotoContainer = styled.div`
@@ -63,4 +64,18 @@ export const CloseHeader = styled(Link)`
     text-align:center;
     font-size:2rem;
     font-weight:10;
+`;
+
+export const CloseHeaderDown = styled(Link)`
+    display:flex;
+    flex-direction:row;
+    justify-content:center;
+    text-align:center;
+    font-size:2rem;
+    font-weight:10;
+    margin-top:-3rem;
+    
+    @media screen and (max-width: 769px){
+        margin-top:70rem;
+    }
 `;
