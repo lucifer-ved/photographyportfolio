@@ -4,7 +4,7 @@ import { FooterContainer, FooterText } from './FooterElements';
 const Footer = () => {
     return (
         <FooterContainer>
-            <FooterText> &#169; 2021 Vedant Solanki. All rights reserved.</FooterText>
+            <FooterText> &#169; 2021 Vedant Solanki.</FooterText>
         </FooterContainer>
     )
 }

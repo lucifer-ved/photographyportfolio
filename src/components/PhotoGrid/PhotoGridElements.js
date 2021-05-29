@@ -76,6 +76,6 @@ export const CloseHeaderDown = styled(Link)`
     margin-top:-3rem;
     
     @media screen and (max-width: 769px){
-        margin-top:70rem;
+        margin-top:68rem;
     }
 `;

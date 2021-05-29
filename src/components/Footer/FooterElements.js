@@ -7,7 +7,7 @@ export const FooterContainer = styled.div`
     font-size:1rem;
     margin : 20px;
     padding:2rem;
-    width:100vw;
+    width:95vw;
 
     @media screen and (max-width: 769px){
         width:80vw;
