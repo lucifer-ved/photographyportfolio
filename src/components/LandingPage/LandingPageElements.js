@@ -13,7 +13,7 @@ export const LandingPageContainer = styled.div`
 export const Pictures = styled.img`
     display:flex;
     justify-content:center;
-    // padding:2rem;
+    padding-top:30px;
     height:35rem;
     margin:4% auto;
 

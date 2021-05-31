@@ -8,7 +8,20 @@ export const HeaderContainer = styled.div`
     flex-direction:row;
     background:#fff;
     color:#000;
-    justify-content:space-between;
+    justify-content:space-between; 
+    flex-grow:1;
+    font-size:1.5rem;
+    margin:1.5rem auto;
+    min-width:480px;
+    a{
+        text-decoration:none;
+        color:#000;
+        cursor:pointer;
+    }
+
+    >*{
+        margin:2rem;
+    }
 `;
 
 export const Name = styled(Link)`
@@ -22,22 +35,6 @@ export const Name = styled(Link)`
     &:hover{
         font-weight:700;
         text-shadow: 0px 10px 2px #C0C0C0;
-    }
-`;
-
-export const OtherOptions = styled.div`
-    display:flex;
-    flex-direction:flex-end;
-    font-size:1.5rem;
-
-    a{
-        text-decoration:none;
-        color:#000;
-        cursor:pointer;
-    }
-
-    >*{
-        margin:2rem;
     }
 `;
 
