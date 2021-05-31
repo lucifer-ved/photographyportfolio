@@ -13,11 +13,11 @@ export const LandingPageContainer = styled.div`
 export const Pictures = styled.img`
     display:flex;
     justify-content:center;
-    padding-top:30px;
     height:35rem;
     margin:4% auto;
 
     @media screen and (max-width: 769px){
+        padding-top:40px;
         margin-top:5%;
         width:32em;
         object-fit:contain;
