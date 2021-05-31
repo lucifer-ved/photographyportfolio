@@ -19,7 +19,7 @@ export const Pictures = styled.img`
 
     @media screen and (max-width: 769px){
         margin-top:5%;
-        width:30rem;
+        width:32em;
         object-fit:contain;
     }
 `;

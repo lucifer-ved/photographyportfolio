@@ -11,8 +11,9 @@ export const HeaderContainer = styled.div`
     justify-content:space-between; 
     flex-grow:1;
     font-size:1.5rem;
-    margin:1.5rem auto;
+    margin:1.2rem;
     min-width:480px;
+
     a{
         text-decoration:none;
         color:#000;
