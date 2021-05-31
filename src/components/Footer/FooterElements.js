@@ -10,7 +10,7 @@ export const FooterContainer = styled.div`
     width:95vw;
 
     @media screen and (max-width: 769px){
-        width:80vw;
+        width:100vw;
     }
 `;
 
