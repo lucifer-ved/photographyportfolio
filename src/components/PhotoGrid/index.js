@@ -18,9 +18,9 @@ const PhotoGrid = () => {
                     ))
                 }
             </PhotoContainer>
-            <CloseHeaderDown to="/">
+            {/* <CloseHeaderDown to="/">
                 <Close />
-            </CloseHeaderDown>
+            </CloseHeaderDown> */}
         </PhotoGridContainer>
     )
 }

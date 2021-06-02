@@ -39,7 +39,7 @@ export const PhotoGridContainer = styled.div`
 
 export const Pictures = styled.img`
     height: 200px;
-    flex-basis: 20%;
+    flex-basis: 30%;
     padding:10px;
     object-fit:contain;
     display:flex;
