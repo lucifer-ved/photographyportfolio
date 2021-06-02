@@ -1,5 +1,5 @@
 import React , {useState }from 'react';
-import { PhotoGridContainer, Pictures, CloseHeader,CloseHeaderDown, PhotoContainer} from './PhotoGridElements';
+import { PhotoGridContainer, Pictures, CloseHeader, PhotoContainer} from './PhotoGridElements';
 import { images } from '../../ImageList';
 import { IoCloseOutline as Close } from  'react-icons/io5';
 
