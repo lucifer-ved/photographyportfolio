@@ -12,7 +12,7 @@ export const HeaderContainer = styled.div`
     flex-grow:1;
     font-size:1.5rem;
     margin:1.2rem;
-    min-width:480px;
+    min-width:530px;
 
     a{
         text-decoration:none;
@@ -22,6 +22,10 @@ export const HeaderContainer = styled.div`
 
     >*{
         margin:2rem;
+    }
+
+    @media screen and (max-width: 769px){
+        
     }
 `;
 

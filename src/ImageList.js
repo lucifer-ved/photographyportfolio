@@ -28,10 +28,12 @@ import twny7 from  './Images/27.jpeg';
 import twny8 from  './Images/28.jpeg';
 import twny9 from  './Images/29.jpeg';
 import thirty from  './Images/30.jpeg';
+import above1 from  './Images/1above.jpeg';
 
 
 
 export const images = [
+    above1,
     one,
     to,
     thre,
