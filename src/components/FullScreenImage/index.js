@@ -29,13 +29,13 @@ const FullScreenImage = ({ photos, index, from, onChange, onClose }) => {
 
     const step = dir => onChange((index + dir + photos.length) % photos.length);
 
-    // Show the light copy straight away, then swap in the full file once it has loaded.
+    // Show the light copy straight away, then swap in the screen-sized one once it has loaded.
     useEffect(() => {
         let current = true;
         setSrc(photo.small);
         const full = new Image();
-        full.onload = () => { if (current) setSrc(photo.src); };
-        full.src = photo.src;
+        full.onload = () => { if (current) setSrc(photo.large); };
+        full.src = photo.large;
         return () => { current = false; };
     }, [photo]);
 

@@ -85,7 +85,7 @@ const Flight = () => {
             k: .9 + .45 * ((i * .618034) % 1),
             bob: .9 + .7 * ((i * .7548) % 1),   // each photo drifts at its own pace
             phase: (i * 2.399) % 6.283,
-            x: 0, y: 0, z: i * GAP, w: 0, h: 0, vis: null, lift: 1,
+            x: 0, y: 0, z: i * GAP, w: 0, h: 0, vis: null, lift: 1, ready: false,
         }));
 
         const colours = [];
@@ -153,7 +153,7 @@ const Flight = () => {
                 const zr = mod(t.z - cam + NEAR, DEPTH) - NEAR;
                 const s = FOCAL / (FOCAL + zr);
                 const a = clamp((s - .12) / .16, 0, 1) * clamp((zr + NEAR) / 260, 0, 1);
-                if (a <= 0) {
+                if (a <= 0 || !t.ready) {
                     if (t.vis !== false) { t.vis = false; t.el.style.visibility = 'hidden'; }
                     return;
                 }
@@ -188,7 +188,7 @@ const Flight = () => {
             // Opening: a few quick scrolls' worth of speed, which then eases off by
             // itself exactly as a real scroll does. The name arrives as it settles.
             while (flicks < FLICKS && now - t0 >= flicks * FLICK_GAP) { v += FLICK; flicks++; }
-            if (!isNamed && flicks >= FLICKS && v < 24) showName();
+            if (begun && !isNamed && flicks >= FLICKS && v < 24) showName();
             const look = ptr.inside && !reduced && !openRef.current;
             camx += ((look ? ptr.nx * base * .25 : 0) - camx) * .06 * dt;
             camy += ((look ? ptr.ny * base * .1 : 0) - camy) * .06 * dt;
@@ -266,17 +266,37 @@ const Flight = () => {
         };
         const onResize = () => { layout(); place(); };
 
-        // Plays on every load.
-        let begin = 0;
-        if (reduced) {
+        // A photo stays hidden until its file has arrived, and the opening waits for
+        // them (briefly), so the flight never starts with empty cards.
+        let begun = false, gate = 0, pending = items.length;
+        const begin = () => {
+            if (begun) return;
+            begun = true;
+            clearTimeout(gate);
             setStarted(true);
-            showName();
-        } else {
-            begin = setTimeout(() => setStarted(true), 80);
-            flicks = 0;
-            t0 = performance.now();
-            fallback = setTimeout(showName, 5000);
-        }
+            if (reduced) {
+                showName();
+            } else {
+                flicks = 0;
+                t0 = performance.now();
+                fallback = setTimeout(showName, 5000);
+            }
+        };
+        items.forEach(t => {
+            const img = t.el.firstChild;
+            const done = () => {
+                if (t.ready) return;
+                t.ready = true;
+                if (--pending <= 0) begin();
+            };
+            const decoded = () => (img.decode ? img.decode().then(done, done) : done());
+            if (img.complete && img.naturalWidth) decoded();
+            else {
+                img.addEventListener('load', decoded, { once: true });
+                img.addEventListener('error', done, { once: true });
+            }
+        });
+        gate = setTimeout(begin, 3000);
 
         layout();
         place();
@@ -296,7 +316,7 @@ const Flight = () => {
         return () => {
             cancelAnimationFrame(raf);
             clearTimeout(fallback);
-            clearTimeout(begin);
+            clearTimeout(gate);
             el.removeEventListener('pointerdown', onPointerDown);
             el.removeEventListener('wheel', onWheel);
             stage.removeEventListener('pointerover', onOver);
