@@ -37,54 +37,60 @@ export const Name = styled.div`
     pointer-events:none;
     z-index:0;
 
+    > div{
+        position:relative;
+    }
+
     h1{
         margin:0;
         font-family:${air};
         font-weight:200;
         text-transform:uppercase;
-        font-size:clamp(24px,5.6vw,96px);
-        line-height:1.08;
+        font-size:clamp(18px,3.6vw,64px);
+        line-height:1;
+        white-space:nowrap;
         letter-spacing:.17em;
         padding-left:.17em;
     }
 
+    /* The name comes into focus slowly while the photos rush past. */
     h1 span{
-        display:block;
-        opacity:${({ $named }) => ($named ? 1 : 0)};
-        transform:${({ $named }) => ($named ? 'none' : 'translateY(.22em) scale(1.08)')};
-        filter:${({ $named }) => ($named ? 'none' : 'blur(16px)')};
-        transition:opacity 1s ease-out, transform 1.3s cubic-bezier(.16,1,.3,1), filter 1s ease-out;
+        display:inline-block;
+        opacity:${({ $started }) => ($started ? 1 : 0)};
+        transform:${({ $started }) => ($started ? 'none' : 'translateY(.18em) scale(1.1)')};
+        filter:${({ $started }) => ($started ? 'none' : 'blur(18px)')};
+        transition:opacity 2.4s linear, transform 2.7s cubic-bezier(.16,1,.3,1), filter 2.4s ease-out;
     }
 
     h1 span + span{
-        transition-delay:.14s;
+        transition-delay:.3s;
     }
 
+    /* The line sits close under the name in small wide-spaced capitals,
+       surfacing one word at a time through the rush. */
     p{
-        margin:1.5em auto 0;
+        margin:clamp(10px,1.2vw,20px) 0 0;
         white-space:nowrap;
         font-family:${air};
-        font-weight:300;
+        font-weight:400;
         text-transform:uppercase;
-        letter-spacing:.16em;
-        padding-left:.16em;
-        font-size:clamp(10px,.82vw,13px);
-        line-height:1.8;
-        color:${dim};
-        opacity:${({ $named }) => ($named ? 1 : 0)};
-        transition:opacity 1s .55s;
+        font-size:clamp(10px,.95vw,15px);
+        line-height:1.4;
+        letter-spacing:.46em;
+        padding-left:.46em;
+        color:${ink};
     }
 
-    @media screen and (max-width: 769px){
-        p{
-            white-space:normal;
-            max-width:20em;
-            text-wrap:balance;
-        }
+    p span{
+        display:inline-block;
+        opacity:${({ $started }) => ($started ? 1 : 0)};
+        transform:${({ $started }) => ($started ? 'none' : 'translateY(.45em)')};
+        filter:${({ $started }) => ($started ? 'none' : 'blur(8px)')};
+        transition:opacity 1.5s linear, transform 1.7s cubic-bezier(.16,1,.3,1), filter 1.5s ease-out;
     }
 
     @media (prefers-reduced-motion: reduce){
-        h1 span, p{
+        h1 span, p span{
             transition:none;
         }
     }
@@ -155,7 +161,7 @@ export const Corner = styled.div`
     pointer-events:none;
     z-index:0;
     opacity:${({ $named }) => ($named ? 1 : 0)};
-    transition:opacity .9s .35s;
+    transition:opacity 2.2s linear .3s;
 
     &[data-edge='top']{
         top:clamp(14px,2.5vh,26px);
@@ -172,6 +178,11 @@ export const Corner = styled.div`
 `;
 
 export const Hint = styled.div`
+    /* hangs below the name without counting toward its centring */
+    position:absolute;
+    top:100%;
+    left:50%;
+    transform:translateX(-50%);
     margin-top:2.6em;
     display:flex;
     flex-direction:column;
@@ -245,7 +256,7 @@ export const Credit = styled.p`
     color:${dim};
     z-index:2;
     opacity:${({ $named }) => ($named ? 1 : 0)};
-    transition:opacity .9s .35s;
+    transition:opacity 2.2s linear .3s;
 
     a{
         color:${ink};
@@ -287,9 +298,32 @@ export const CursorRing = styled.div`
     width:22px;
     height:22px;
     margin:-11px 0 0 -11px;
-    border:1px solid #fff;
+    border:1.5px solid #fff;
     border-radius:50%;
     mix-blend-mode:difference;
+    color:#fff;
+    transition:border-color .2s;
+
+    /* over a photo the ring gives way to an eye; the dot becomes its pupil */
+    svg{
+        position:absolute;
+        left:50%;
+        top:50%;
+        width:28px;
+        height:28px;
+        margin:-14px 0 0 -14px;
+        overflow:visible;
+        opacity:0;
+        transition:opacity .2s;
+    }
+
+    &[data-eye='1']{
+        border-color:transparent !important;
+    }
+
+    &[data-eye='1'] svg{
+        opacity:1;
+    }
 `;
 
 export const CursorDot = styled.div`

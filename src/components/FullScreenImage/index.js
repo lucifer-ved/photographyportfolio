@@ -1,13 +1,29 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FullScreenContainer, Bar, Count, ImageStage, Title, Meaning, Nav } from './FullScreenElements';
+import { FullScreenContainer, Veil, Frame, Count, IconButton, Caption, Title, Meaning } from './FullScreenElements';
 
 const pad = n => String(n).padStart(2, '0');
 
+// Largest size at which the photo and its mat fit between the top and bottom
+// bands and the two arrow gutters.
+const fit = photo => {
+    const W = window.innerWidth, H = window.innerHeight;
+    const narrow = W <= 769;
+    const mat = narrow ? 13 : 22;
+    const ratio = photo.width / photo.height;
+    const width = Math.max(120, Math.min((narrow ? W - 32 : W - 208) - 2 * mat, (H - 168 - 2 * mat) * ratio));
+    return { width: Math.round(width), height: Math.round(width / ratio), mat };
+};
+
+const Icon = ({ d }) => <svg viewBox="0 0 24 24" aria-hidden="true"><path d={d} /></svg>;
+
 const FullScreenImage = ({ photos, index, from, onChange, onClose }) => {
     const photo = photos[index];
+    const frameRef = useRef(null);
     const imageRef = useRef(null);
     const closeRef = useRef(null);
     const [src, setSrc] = useState(photo.small);
+    const [, setResized] = useState(0);
+    const size = fit(photo);
 
     const step = dir => onChange((index + dir + photos.length) % photos.length);
 
@@ -24,7 +40,12 @@ const FullScreenImage = ({ photos, index, from, onChange, onClose }) => {
     useEffect(() => {
         const previous = document.activeElement;
         closeRef.current.focus();
-        return () => { if (previous && previous.focus) previous.focus(); };
+        const onResize = () => setResized(n => n + 1);
+        window.addEventListener('resize', onResize);
+        return () => {
+            window.removeEventListener('resize', onResize);
+            if (previous && previous.focus) previous.focus();
+        };
     }, []);
 
     useEffect(() => {
@@ -37,20 +58,21 @@ const FullScreenImage = ({ photos, index, from, onChange, onClose }) => {
         return () => window.removeEventListener('keydown', onKeyDown);
     });
 
-    // The photo grows out of the tile that was clicked.
+    // The framed photo grows out of the tile that was clicked.
     useEffect(() => {
+        const frame = frameRef.current;
         const img = imageRef.current;
         const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (!from || reduced || !img.animate) return;
-        img.style.visibility = 'hidden';
+        if (!from || reduced || !frame.animate) return;
+        frame.style.visibility = 'hidden';
         const grow = () => {
-            img.style.visibility = '';
-            const to = img.getBoundingClientRect();
+            frame.style.visibility = '';
+            const to = frame.getBoundingClientRect();
             if (!to.width) return;
             const scale = from.width / to.width;
             const dx = from.left + from.width / 2 - (to.left + to.width / 2);
             const dy = from.top + from.height / 2 - (to.top + to.height / 2);
-            img.animate(
+            frame.animate(
                 [{ transform: `translate(${dx}px,${dy}px) scale(${scale})` }, { transform: 'none' }],
                 { duration: 620, easing: 'cubic-bezier(.16,1,.3,1)' }
             );
@@ -60,22 +82,30 @@ const FullScreenImage = ({ photos, index, from, onChange, onClose }) => {
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
-        <FullScreenContainer role="dialog" aria-modal="true" aria-label="Photograph">
-            <Bar>
-                <Count>{pad(index + 1)} / {photos.length}</Count>
-                <button type="button" ref={closeRef} onClick={onClose}>Close</button>
-            </Bar>
-            <ImageStage onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-                <img ref={imageRef} src={src} alt={photo.title} />
-            </ImageStage>
-            <Bar>
+        <FullScreenContainer
+            role="dialog"
+            aria-modal="true"
+            aria-label="Photograph"
+            onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+        >
+            <Veil />
+            <Frame ref={frameRef} style={{ padding: size.mat }}>
+                <img ref={imageRef} src={src} alt={photo.title} width={size.width} height={size.height} />
+            </Frame>
+            <Count>{pad(index + 1)} / {photos.length}</Count>
+            <IconButton type="button" data-pos="close" ref={closeRef} aria-label="Close" onClick={onClose}>
+                <Icon d="M6 6l12 12M18 6L6 18" />
+            </IconButton>
+            <IconButton type="button" data-pos="prev" aria-label="Previous photograph" onClick={() => step(-1)}>
+                <Icon d="M19 12H5M11 6l-6 6 6 6" />
+            </IconButton>
+            <IconButton type="button" data-pos="next" aria-label="Next photograph" onClick={() => step(1)}>
+                <Icon d="M5 12h14M13 6l6 6-6 6" />
+            </IconButton>
+            <Caption>
                 <Title>{photo.title}</Title>
                 <Meaning>{photo.meaning ? `${photo.meaning} · ` : ''}{photo.category}</Meaning>
-                <Nav>
-                    <button type="button" aria-label="Previous photograph" onClick={() => step(-1)}>Prev</button>
-                    <button type="button" aria-label="Next photograph" onClick={() => step(1)}>Next</button>
-                </Nav>
-            </Bar>
+            </Caption>
         </FullScreenContainer>
     )
 }

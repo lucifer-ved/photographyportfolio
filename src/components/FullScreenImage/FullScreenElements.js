@@ -1,25 +1,22 @@
 import styled from 'styled-components';
 
-const paper = '#f3ede4';
-const dim = '#a79f93';
-const line = '#3a352e';
-const dark = '#0b0a09';
+const ink = '#16131c';
+const paper = '#f1f0f5';
+const dim = '#6d6676';
+const edge = 'clamp(16px,2.4vw,32px)';
 
+// The photo sits dead centre on a light veil. Count, close and arrows hold fixed
+// places on the edges of the screen; the title sits on the centre line below.
 export const FullScreenContainer = styled.div`
     position:fixed;
     inset:0;
     z-index:50;
     display:grid;
-    grid-template-rows:auto minmax(0,1fr) auto;
-    gap:10px;
-    padding:12px 16px 14px;
-    background:rgba(11,10,9,.64);
-    -webkit-backdrop-filter:blur(9px);
-    backdrop-filter:blur(9px);
-    color:${paper};
+    place-items:center;
+    color:${ink};
     font-family:'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
-    font-size:12px;
-    letter-spacing:.06em;
+    font-size:11px;
+    letter-spacing:.1em;
     text-transform:uppercase;
     animation:fadeIn .3s ease-out;
 
@@ -29,72 +26,146 @@ export const FullScreenContainer = styled.div`
         }
     }
 
-    button{
-        padding:8px 12px;
-        border:1px solid ${line};
-        border-radius:999px;
-        background:none;
-        color:inherit;
-        font:inherit;
-        letter-spacing:inherit;
-        text-transform:inherit;
-    }
-
-    button:hover{
-        background:${paper};
-        color:${dark};
-    }
-
-    button:focus-visible{
-        outline:2px solid ${paper};
-        outline-offset:3px;
+    @media (prefers-reduced-motion: reduce){
+        animation:none;
     }
 `;
 
-export const Bar = styled.div`
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:16px;
+// The veil is its own layer, so the glass frame above it can still see through
+// to the photos moving behind.
+export const Veil = styled.div`
+    position:absolute;
+    inset:0;
+    background:rgba(241,240,245,.55);
+    -webkit-backdrop-filter:blur(14px);
+    backdrop-filter:blur(14px);
+    pointer-events:none;
+`;
+
+// A frosted glass mount: the photos drifting behind it tint the frame.
+export const Frame = styled.div`
+    position:relative;
+    background:rgba(255,255,255,.3);
+    border:1px solid rgba(255,255,255,.85);
+    border-radius:3px;
+    -webkit-backdrop-filter:blur(26px) saturate(1.9);
+    backdrop-filter:blur(26px) saturate(1.9);
+    box-shadow:0 30px 70px -34px rgba(22,19,28,.5);
+
+    img{
+        display:block;
+        outline:1px solid rgba(22,19,28,.14);
+    }
 `;
 
 export const Count = styled.span`
+    position:absolute;
+    left:${edge};
+    top:0;
+    height:84px;
+    display:flex;
+    align-items:center;
     color:${dim};
     font-variant-numeric:tabular-nums;
+    pointer-events:none;
 `;
 
-export const ImageStage = styled.div`
-    min-height:0;
-    position:relative;
+export const IconButton = styled.button`
+    position:absolute;
+    width:40px;
+    height:40px;
+    display:grid;
+    place-items:center;
+    padding:0;
+    border:1px solid ${dim};
+    border-radius:50%;
+    background:none;
+    color:inherit;
 
-    img{
-        position:absolute;
-        inset:0;
-        margin:auto;
-        max-width:100%;
-        max-height:100%;
-        width:auto;
-        height:auto;
-        box-shadow:0 30px 80px -30px rgba(0,0,0,.8);
+    &[data-pos='close']{
+        right:${edge};
+        top:22px;
+    }
+
+    &[data-pos='prev']{
+        left:${edge};
+        top:50%;
+        margin-top:-20px;
+    }
+
+    &[data-pos='next']{
+        right:${edge};
+        top:50%;
+        margin-top:-20px;
+    }
+
+    svg{
+        width:16px;
+        height:16px;
+        fill:none;
+        stroke:currentColor;
+        stroke-width:1.5;
+        stroke-linecap:round;
+        stroke-linejoin:round;
+    }
+
+    &:hover{
+        background:${ink};
+        border-color:${ink};
+        color:${paper};
+    }
+
+    &:focus-visible{
+        outline:2px solid ${ink};
+        outline-offset:3px;
+    }
+
+    @media screen and (max-width: 769px){
+        &[data-pos='prev'], &[data-pos='next']{
+            top:auto;
+            bottom:22px;
+            margin-top:0;
+        }
+    }
+`;
+
+export const Caption = styled.div`
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    height:84px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:0 16px;
+    text-align:center;
+    pointer-events:none;
+
+    @media screen and (max-width: 769px){
+        padding:0 64px;
     }
 `;
 
 export const Title = styled.span`
     font-family:'Instrument Serif', Georgia, 'Times New Roman', serif;
     font-style:italic;
-    font-size:22px;
+    font-size:30px;
+    line-height:1.05;
     letter-spacing:0;
     text-transform:none;
-    min-width:0;
+
+    @media screen and (max-width: 769px){
+        font-size:24px;
+    }
 `;
 
 export const Meaning = styled.span`
     color:${dim};
-    min-width:0;
-    text-align:center;
-`;
 
-export const Nav = styled.div`
-    display:flex;
-    gap:6px;
+    @media screen and (max-width: 769px){
+        font-size:9px;
+    }
 `;

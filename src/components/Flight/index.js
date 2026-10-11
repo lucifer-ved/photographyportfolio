@@ -4,17 +4,50 @@ import FullScreenImage from '../FullScreenImage';
 import { photos } from '../../ImageList';
 
 const COUNT = photos.length;
+const TAGLINE = ['The', 'world,', 'as', 'I', 'found', 'it'];
 const GAP = 430;            // distance between one photo and the next
 const DEPTH = COUNT * GAP;  // the loop the camera flies around
 const NEAR = 380;           // how far past the viewer a photo travels before it fades
 const FOCAL = 700;
 const CRUISE = 9;
-const RUSH = 150;           // opening speed
-const HOLD = 450;           // ms the opening stays at full speed
+const FLICKS = 9;           // the opening plays like this many quick scrolls
+const FLICK = 125;          // speed each one adds
+const FLICK_GAP = 180;      // ms between them
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const mod = (n, m) => ((n % m) + m) % m;
 const pad = n => String(n).padStart(2, '0');
+
+// A photo's dominant colour, leaning toward its saturated areas so skies and
+// fabrics win over grey and white, then pushed away from grey and brightened.
+const colourOf = img => {
+    try {
+        const size = 24;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, size, size);
+        const data = ctx.getImageData(0, 0, size, size).data;
+        let r = 0, g = 0, b = 0, total = 0;
+        for (let i = 0; i < data.length; i += 4) {
+            const max = Math.max(data[i], data[i + 1], data[i + 2]);
+            const min = Math.min(data[i], data[i + 1], data[i + 2]);
+            const weight = .02 + Math.pow((max - min) / 255, 2);
+            r += data[i] * weight;
+            g += data[i + 1] * weight;
+            b += data[i + 2] * weight;
+            total += weight;
+        }
+        const avg = [r / total, g / total, b / total];
+        const grey = (avg[0] + avg[1] + avg[2]) / 3;
+        const vivid = avg.map(c => clamp(grey + (c - grey) * 1.7, 0, 255));
+        const lift = 240 / Math.max(vivid[0], vivid[1], vivid[2], 1);
+        return `rgb(${vivid.map(c => Math.round(Math.min(255, c * lift))).join(',')})`;
+    } catch (e) {
+        return '';
+    }
+};
 
 const Flight = () => {
     const containerRef = useRef(null);
@@ -25,6 +58,7 @@ const Flight = () => {
     const labelRef = useRef(null);
     const draggedRef = useRef(false);
     const openRef = useRef(false);
+    const [started, setStarted] = useState(false);
     const [named, setNamed] = useState(false);
     const [travelled, setTravelled] = useState(false);
     const [open, setOpen] = useState(null);
@@ -54,9 +88,27 @@ const Flight = () => {
             x: 0, y: 0, z: i * GAP, w: 0, h: 0, vis: null,
         }));
 
+        const colours = [];
+        items.forEach(t => {
+            const img = t.el.firstChild;
+            const read = () => { colours[t.i] = colourOf(img); };
+            if (img.complete && img.naturalWidth) read();
+            else img.addEventListener('load', read, { once: true });
+        });
+        // Over a photo the cursor takes that photo's colour; elsewhere it inverts the page.
+        const paintCursor = colour => {
+            ring.style.borderColor = colour;
+            ring.style.color = colour;
+            ring.style.mixBlendMode = colour ? 'normal' : '';
+            dot.style.background = colour;
+            dot.style.mixBlendMode = colour ? 'normal' : '';
+            label.style.background = colour;
+            label.style.color = colour ? '#16131c' : '';
+        };
+
         let W = 0, H = 0, base = 0;
         let cam = 0, v = 0, camx = 0, camy = 0;
-        let boost = 0, rush = false, t0 = 0, tau = 260, isNamed = false;
+        let flicks = FLICKS, t0 = 0, isNamed = false;
         let hover = false, shown = -1, raf = 0, prev = performance.now(), fallback = 0;
         const ptr = { nx: 0, ny: 0, inside: false };
         const drag = { on: false, x: 0, y: 0 };
@@ -129,15 +181,10 @@ const Flight = () => {
                 v += (target - v) * .035 * dt;
                 cam += v * dt;
             }
-            // Opening rush: hold at full speed, bleed it off, then bring the name in.
-            if (rush) {
-                const t = now - t0;
-                boost = t < HOLD ? RUSH : RUSH * Math.exp(-(t - HOLD) / tau);
-                if (boost < 2) { boost = 0; rush = false; }
-                cam += boost * dt;
-                stage.style.transform = boost ? `scale(${(1 + .14 * boost / RUSH).toFixed(4)})` : '';
-            }
-            if (!isNamed && boost < 16) showName();
+            // Opening: a few quick scrolls' worth of speed, which then eases off by
+            // itself exactly as a real scroll does. The name arrives as it settles.
+            while (flicks < FLICKS && now - t0 >= flicks * FLICK_GAP) { v += FLICK; flicks++; }
+            if (!isNamed && flicks >= FLICKS && v < 24) showName();
             const look = ptr.inside && !reduced && !openRef.current;
             camx += ((look ? ptr.nx * base * .25 : 0) - camx) * .06 * dt;
             camy += ((look ? ptr.ny * base * .1 : 0) - camy) * .06 * dt;
@@ -148,13 +195,6 @@ const Flight = () => {
             mouse.scale += (open - mouse.scale) * Math.min(1, .16 * dt);
             ring.style.transform = `translate3d(${mouse.rx.toFixed(1)}px,${mouse.ry.toFixed(1)}px,0) scale(${mouse.scale.toFixed(3)})`;
             raf = requestAnimationFrame(frame);
-        };
-
-        const skipRush = () => {
-            if (!rush) return;
-            const now = performance.now();
-            if (now - t0 < HOLD) t0 = now - HOLD;
-            tau = 110;
         };
 
         const onPointerMove = e => {
@@ -181,7 +221,6 @@ const Flight = () => {
         };
         const onPointerDown = e => {
             if (openRef.current) return;
-            skipRush();
             drag.on = true;
             drag.x = e.clientX;
             drag.y = e.clientY;
@@ -192,13 +231,11 @@ const Flight = () => {
         const onWheel = e => {
             e.preventDefault();
             if (openRef.current) return;
-            skipRush();
             markTravelled();
             v += (e.deltaY + e.deltaX) * .45;
         };
         const onKeyDown = e => {
             if (openRef.current) return;
-            skipRush();
             if (e.key === 'ArrowUp' || e.key === 'ArrowRight') v += 60;
             else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') v -= 60;
             else return;
@@ -210,24 +247,27 @@ const Flight = () => {
             hover = !!tile;
             if (tile) label.textContent = tile.dataset.title;
             label.style.opacity = tile ? 1 : 0;
+            ring.dataset.eye = tile ? '1' : '0';
+            paintCursor(tile ? colours[Array.prototype.indexOf.call(stage.children, tile)] || '' : '');
         };
         const onOut = () => {
             hover = false;
             label.style.opacity = 0;
+            ring.dataset.eye = '0';
+            paintCursor('');
         };
         const onResize = () => { layout(); place(); };
 
-        // The rush plays once per visit; after that the page opens already cruising.
-        let seen = false;
-        try { seen = sessionStorage.getItem('flight-intro') === '1'; } catch (e) {}
-        if (reduced || seen) {
+        // Plays on every load.
+        let begin = 0;
+        if (reduced) {
+            setStarted(true);
             showName();
         } else {
-            try { sessionStorage.setItem('flight-intro', '1'); } catch (e) {}
-            rush = true;
-            boost = RUSH;
+            begin = setTimeout(() => setStarted(true), 80);
+            flicks = 0;
             t0 = performance.now();
-            fallback = setTimeout(showName, 2600);
+            fallback = setTimeout(showName, 5000);
         }
 
         layout();
@@ -248,6 +288,7 @@ const Flight = () => {
         return () => {
             cancelAnimationFrame(raf);
             clearTimeout(fallback);
+            clearTimeout(begin);
             el.removeEventListener('pointerdown', onPointerDown);
             el.removeEventListener('wheel', onWheel);
             stage.removeEventListener('pointerover', onOver);
@@ -264,18 +305,32 @@ const Flight = () => {
     const openPhoto = (index, e) => {
         if (draggedRef.current) return;
         labelRef.current.style.opacity = 0;
+        ringRef.current.style.borderColor = '';
+        ringRef.current.style.color = '';
+        ringRef.current.dataset.eye = '0';
+        ringRef.current.style.mixBlendMode = '';
+        dotRef.current.style.background = '';
+        dotRef.current.style.mixBlendMode = '';
         setOpen({ index, from: e.currentTarget.getBoundingClientRect() });
     };
 
     return (
         <FlightContainer ref={containerRef}>
-            <Name $named={named}>
+            <Name $started={started} $named={named}>
                 <div>
                     <h1 aria-label="Vedant Solanki">
-                        <span>Vedant</span>
+                        <span>Vedant</span>{' '}
                         <span>Solanki</span>
                     </h1>
-                    <p>Photographs of people, colour and long light</p>
+                    <p>
+                        {
+                            TAGLINE.map((word, index) => (
+                                <React.Fragment key={index}>
+                                    <span style={{ transitionDelay: `${500 + index * 160}ms` }}>{word}</span>{' '}
+                                </React.Fragment>
+                            ))
+                        }
+                    </p>
                     <Hint $show={named && !travelled}><i aria-hidden="true" />Scroll</Hint>
                 </div>
             </Name>
@@ -288,11 +343,11 @@ const Flight = () => {
                     ))
                 }
             </Stage>
-            <Corner data-edge="top" $named={named}>
+            <Corner data-edge="top" $named={started}>
                 <span>VS</span>
                 <span>Frame <b ref={countRef}>01</b> / {COUNT}</span>
             </Corner>
-            <Credit $named={named}>
+            <Credit $named={started}>
                 Site by{' '}
                 <a href="https://theideaforgelabs.com/" target="_blank" rel="noopener noreferrer">IdeaForgeLabs ↗</a>
             </Credit>
@@ -306,7 +361,12 @@ const Flight = () => {
                     onClose={() => setOpen(null)}
                 />
             }
-            <CursorRing ref={ringRef} aria-hidden="true" />
+            <CursorRing ref={ringRef} aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round">
+                    <path d="M1.5 12C6 4.5 18 4.5 22.5 12C18 19.5 6 19.5 1.5 12Z" />
+                    <circle cx="12" cy="12" r="4.2" />
+                </svg>
+            </CursorRing>
             <CursorDot ref={dotRef} aria-hidden="true" />
             <CursorLabel ref={labelRef} aria-hidden="true" />
         </FlightContainer>
