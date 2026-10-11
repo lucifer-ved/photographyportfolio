@@ -100,6 +100,11 @@ export const Stage = styled.div`
     position:absolute;
     inset:0;
     z-index:1;
+
+    &[data-hover='1'] button:not(:hover) img{
+        opacity:.42;
+        filter:saturate(.55);
+    }
 `;
 
 export const Tile = styled.button`
@@ -125,20 +130,17 @@ export const Tile = styled.button`
         width:100%;
         height:100%;
         object-fit:cover;
-        transition:transform .5s cubic-bezier(.2,.8,.2,1);
+        transition:opacity .45s ease, filter .45s ease;
         -webkit-user-drag:none;
     }
 
+    /* The hovered photo lifts toward you on a glow of its own colour,
+       while the rest step back. No border. */
     &:hover{
-        outline:3px solid ${accent};
         box-shadow:
             0 2px 4px rgba(22,19,28,.10),
-            0 20px 30px -10px rgba(22,19,28,.26),
-            0 78px 56px -34px rgba(22,19,28,.46);
-    }
-
-    &:hover img, &:focus-visible img{
-        transform:scale(1.06);
+            0 26px 44px -10px var(--glow, rgba(22,19,28,.3)),
+            0 84px 60px -36px rgba(22,19,28,.42);
     }
 
     &:focus-visible{

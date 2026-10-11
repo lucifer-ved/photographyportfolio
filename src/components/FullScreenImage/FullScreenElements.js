@@ -26,6 +26,12 @@ export const FullScreenContainer = styled.div`
         }
     }
 
+    /* On a phone the photo and its title form one centred group. */
+    @media screen and (max-width: 769px){
+        align-content:center;
+        row-gap:14px;
+    }
+
     @media (prefers-reduced-motion: reduce){
         animation:none;
     }
@@ -109,7 +115,15 @@ export const IconButton = styled.button`
         stroke-linejoin:round;
     }
 
-    &:hover{
+    @media (hover:hover){
+        &:hover{
+            background:${ink};
+            border-color:${ink};
+            color:${paper};
+        }
+    }
+
+    &:active{
         background:${ink};
         border-color:${ink};
         color:${paper};
@@ -145,7 +159,9 @@ export const Caption = styled.div`
     pointer-events:none;
 
     @media screen and (max-width: 769px){
-        padding:0 64px;
+        position:relative;
+        height:auto;
+        padding:0 16px;
     }
 `;
 

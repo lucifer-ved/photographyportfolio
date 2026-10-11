@@ -10,7 +10,9 @@ const fit = photo => {
     const narrow = W <= 769;
     const mat = narrow ? 13 : 22;
     const ratio = photo.width / photo.height;
-    const width = Math.max(120, Math.min((narrow ? W - 32 : W - 208) - 2 * mat, (H - 168 - 2 * mat) * ratio));
+    // A phone also keeps room for the title under the photo and the arrows below that.
+    const bands = narrow ? 84 + 74 + 84 : 168;
+    const width = Math.max(120, Math.min((narrow ? W - 32 : W - 208) - 2 * mat, (H - bands - 2 * mat) * ratio));
     return { width: Math.round(width), height: Math.round(width / ratio), mat };
 };
 

@@ -85,13 +85,16 @@ const Flight = () => {
             k: .9 + .45 * ((i * .618034) % 1),
             bob: .9 + .7 * ((i * .7548) % 1),   // each photo drifts at its own pace
             phase: (i * 2.399) % 6.283,
-            x: 0, y: 0, z: i * GAP, w: 0, h: 0, vis: null,
+            x: 0, y: 0, z: i * GAP, w: 0, h: 0, vis: null, lift: 1,
         }));
 
         const colours = [];
         items.forEach(t => {
             const img = t.el.firstChild;
-            const read = () => { colours[t.i] = colourOf(img); };
+            const read = () => {
+                colours[t.i] = colourOf(img);
+                if (colours[t.i]) t.el.style.setProperty('--glow', colours[t.i].replace('rgb(', 'rgba(').replace(')', ',.62)'));
+            };
             if (img.complete && img.naturalWidth) read();
             else img.addEventListener('load', read, { once: true });
         });
@@ -109,7 +112,7 @@ const Flight = () => {
         let W = 0, H = 0, base = 0;
         let cam = 0, v = 0, camx = 0, camy = 0;
         let flicks = FLICKS, t0 = 0, isNamed = false;
-        let hover = false, shown = -1, raf = 0, prev = performance.now(), fallback = 0;
+        let hover = false, hot = -1, shown = -1, raf = 0, prev = performance.now(), fallback = 0;
         const ptr = { nx: 0, ny: 0, inside: false };
         const drag = { on: false, x: 0, y: 0 };
 
@@ -161,8 +164,9 @@ const Flight = () => {
                 // A slow rise and fall with a slight tilt, larger for nearer photos.
                 const wave = time * t.bob + t.phase;
                 const lift = reduced ? 0 : Math.sin(wave) * 9 * s;
+                t.lift += ((t.i === hot && !openRef.current ? 1.08 : 1) - t.lift) * .14;
                 const tilt = reduced ? 0 : Math.sin(wave * .7 + 1.3) * .9;
-                t.el.style.transform = `translate3d(${sx.toFixed(1)}px,${(sy + lift).toFixed(1)}px,0) scale(${s.toFixed(3)}) rotate(${tilt.toFixed(2)}deg)`;
+                t.el.style.transform = `translate3d(${sx.toFixed(1)}px,${(sy + lift).toFixed(1)}px,0) scale(${(s * t.lift).toFixed(3)}) rotate(${tilt.toFixed(2)}deg)`;
                 t.el.style.opacity = a.toFixed(3);
                 t.el.style.zIndex = Math.round(s * 1000);
                 if (zr >= 0 && zr < best) { best = zr; bi = t.i; }
@@ -245,6 +249,8 @@ const Flight = () => {
         const onOver = e => {
             const tile = e.target.closest('button');
             hover = !!tile;
+            hot = tile ? Array.prototype.indexOf.call(stage.children, tile) : -1;
+            stage.dataset.hover = tile ? '1' : '0';
             if (tile) label.textContent = tile.dataset.title;
             label.style.opacity = tile ? 1 : 0;
             ring.dataset.eye = tile ? '1' : '0';
@@ -252,6 +258,8 @@ const Flight = () => {
         };
         const onOut = () => {
             hover = false;
+            hot = -1;
+            stage.dataset.hover = '0';
             label.style.opacity = 0;
             ring.dataset.eye = '0';
             paintCursor('');
@@ -305,6 +313,7 @@ const Flight = () => {
     const openPhoto = (index, e) => {
         if (draggedRef.current) return;
         labelRef.current.style.opacity = 0;
+        stageRef.current.dataset.hover = '0';
         ringRef.current.style.borderColor = '';
         ringRef.current.style.color = '';
         ringRef.current.dataset.eye = '0';
