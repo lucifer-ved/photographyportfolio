@@ -7,13 +7,34 @@
     color: #16131c;
     container-type: size;
     -webkit-font-smoothing: antialiased;
-    transition: opacity 450ms cubic-bezier(.65, 0, .35, 1);
+    transition: opacity 1500ms cubic-bezier(.45, 0, .25, 1);
 }
 
-.wsp-gate--lifting {
+.wsp-gate--reveal,
+.wsp-gate--settled {
     opacity: 0;
-    pointer-events: none;
 }
+
+.wsp-gate--count-exit .wsp-count,
+.wsp-gate--message .wsp-count,
+.wsp-gate--reveal .wsp-count,
+.wsp-gate--settled .wsp-count {
+    opacity: 0;
+}
+
+.wsp-hud, .wsp-rule, .wsp-foot { transition: opacity 380ms ease; }
+.wsp-gate--count-exit .wsp-hud,
+.wsp-gate--count-exit .wsp-rule,
+.wsp-gate--count-exit .wsp-foot,
+.wsp-gate--message .wsp-hud,
+.wsp-gate--message .wsp-rule,
+.wsp-gate--message .wsp-foot,
+.wsp-gate--reveal .wsp-hud,
+.wsp-gate--reveal .wsp-rule,
+.wsp-gate--reveal .wsp-foot,
+.wsp-gate--settled .wsp-hud,
+.wsp-gate--settled .wsp-rule,
+.wsp-gate--settled .wsp-foot { opacity: 0; }
 
 .wsp-hud {
     position: absolute;
@@ -54,6 +75,47 @@
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
     transform: translateY(6%);
+    transition: opacity 380ms ease;
+}
+
+.wsp-handoff {
+    position: fixed;
+    z-index: 101;
+    top: 50%;
+    left: 0;
+    right: 0;
+    margin: 0;
+    transform: translateY(-50%) scale(var(--wsp-start-scale, 1.8));
+    transform-origin: center;
+    opacity: 0;
+    pointer-events: none;
+    text-align: center;
+    font-family: 'Jost', 'Avenir Next', 'Century Gothic', sans-serif;
+    font-size: clamp(10px, .95vw, 15px);
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: .46em;
+    padding-left: .46em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: #16131c;
+    transition: opacity 500ms ease, top 1500ms cubic-bezier(.45, 0, .25, 1), transform 1500ms cubic-bezier(.45, 0, .25, 1);
+}
+
+.wsp-handoff--message,
+.wsp-handoff--reveal {
+    opacity: 1;
+}
+
+.wsp-handoff--reveal,
+.wsp-handoff--settled {
+    top: var(--wsp-target-y);
+    transform: translateY(-50%) scale(1);
+}
+
+.wsp-handoff--settled {
+    opacity: 0;
+    transition: opacity 280ms ease;
 }
 
 .wsp-foot {
@@ -78,4 +140,5 @@
 
 @media (prefers-reduced-motion: reduce) {
     .wsp-gate { transition: none; }
+    .wsp-count, .wsp-handoff, .wsp-hud, .wsp-rule, .wsp-foot { transition: none; }
 }

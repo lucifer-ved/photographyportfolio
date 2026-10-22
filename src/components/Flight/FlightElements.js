@@ -79,18 +79,12 @@ export const Name = styled.div`
         letter-spacing:.46em;
         padding-left:.46em;
         color:${ink};
-    }
-
-    p span{
-        display:inline-block;
-        opacity:${({ $started }) => ($started ? 1 : 0)};
-        transform:${({ $started }) => ($started ? 'none' : 'translateY(.45em)')};
-        filter:${({ $started }) => ($started ? 'none' : 'blur(8px)')};
-        transition:opacity 1.5s linear, transform 1.7s cubic-bezier(.16,1,.3,1), filter 1.5s ease-out;
+        opacity:${({ $taglineVisible }) => ($taglineVisible ? 1 : 0)};
+        transition:opacity 280ms ease;
     }
 
     @media (prefers-reduced-motion: reduce){
-        h1 span, p span{
+        h1 span, p{
             transition:none;
         }
     }

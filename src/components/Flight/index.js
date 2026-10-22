@@ -5,7 +5,6 @@ import WeightSweepPreloader from '../ui/WeightSweepPreloader';
 import { photos } from '../../ImageList';
 
 const COUNT = photos.length;
-const TAGLINE = ['The', 'world,', 'as', 'I', 'found', 'it'];
 const GAP = 430;            // distance between one photo and the next
 const DEPTH = COUNT * GAP;  // the loop the camera flies around
 const NEAR = 380;           // how far past the viewer a photo travels before it fades
@@ -60,9 +59,11 @@ const Flight = () => {
     const draggedRef = useRef(false);
     const openRef = useRef(false);
     const beginRef = useRef(null);
+    const taglineRef = useRef(null);
     const [loadProgress, setLoadProgress] = useState(0);
     const [loading, setLoading] = useState(true);
     const [started, setStarted] = useState(false);
+    const [taglineVisible, setTaglineVisible] = useState(false);
     const [named, setNamed] = useState(false);
     const [travelled, setTravelled] = useState(false);
     const [open, setOpen] = useState(null);
@@ -364,21 +365,13 @@ const Flight = () => {
 
     return (
         <FlightContainer ref={containerRef}>
-            <Name $started={started} $named={named}>
+            <Name $started={started} $named={named} $taglineVisible={taglineVisible}>
                 <div>
                     <h1 aria-label="Vedant Solanki">
                         <span>Vedant</span>{' '}
                         <span>Solanki</span>
                     </h1>
-                    <p>
-                        {
-                            TAGLINE.map((word, index) => (
-                                <React.Fragment key={index}>
-                                    <span style={{ transitionDelay: `${500 + index * 160}ms` }}>{word}</span>{' '}
-                                </React.Fragment>
-                            ))
-                        }
-                    </p>
+                    <p ref={taglineRef}>The world, as I found it</p>
                     <Hint $show={named && !travelled}><i aria-hidden="true" />Scroll</Hint>
                 </div>
             </Name>
@@ -417,10 +410,14 @@ const Flight = () => {
             </CursorRing>
             <CursorDot ref={dotRef} aria-hidden="true" />
             <CursorLabel ref={labelRef} aria-hidden="true" />
-            {loading && <WeightSweepPreloader progress={loadProgress} onComplete={() => {
-                beginRef.current?.();
-                setLoading(false);
-            }} />}
+            {loading && <WeightSweepPreloader
+                progress={loadProgress}
+                targetRef={taglineRef}
+                onPrepare={() => setStarted(true)}
+                onStart={() => beginRef.current?.()}
+                onLand={() => setTaglineVisible(true)}
+                onComplete={() => setLoading(false)}
+            />}
         </FlightContainer>
     )
 }
