@@ -1,0 +1,81 @@
+.wsp-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    overflow: hidden;
+    background: #f1f0f5;
+    color: #16131c;
+    container-type: size;
+    -webkit-font-smoothing: antialiased;
+    transition: opacity 450ms cubic-bezier(.65, 0, .35, 1);
+}
+
+.wsp-gate--lifting {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.wsp-hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: clamp(18px, 3.2cqw, 34px) clamp(18px, 3.2cqw, 40px) 0;
+    font: 500 10px 'JetBrains Mono', ui-monospace, monospace;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+}
+
+.wsp-hud span:last-child {
+    opacity: .55;
+    font-variant-numeric: tabular-nums;
+}
+
+.wsp-rule {
+    position: absolute;
+    top: calc(clamp(18px, 3.2cqw, 34px) + 22px);
+    left: clamp(18px, 3.2cqw, 40px);
+    right: clamp(18px, 3.2cqw, 40px);
+    border-top: .5px solid currentColor;
+    opacity: .18;
+}
+
+.wsp-count {
+    position: absolute;
+    bottom: 0;
+    left: clamp(6px, 1.4cqw, 22px);
+    margin: 0;
+    font-family: 'Jost', 'Avenir Next', 'Century Gothic', sans-serif;
+    font-size: min(70cqh, 43cqw);
+    line-height: .74;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    transform: translateY(6%);
+}
+
+.wsp-foot {
+    position: absolute;
+    top: calc(clamp(18px, 3.2cqw, 34px) + 38px);
+    left: clamp(18px, 3.2cqw, 40px);
+    right: clamp(18px, 3.2cqw, 40px);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    font: 400 10px 'JetBrains Mono', ui-monospace, monospace;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+}
+
+.wsp-foot > span { opacity: .55; white-space: nowrap; }
+.wsp-rail { display: flex; justify-content: space-between; align-items: flex-end; gap: 0; flex: 0 1 min(46cqw, 520px); height: 11px; }
+.wsp-tick { width: 1px; height: 5px; background: currentColor; opacity: .2; }
+.wsp-tick[data-major='true'] { height: 11px; }
+.wsp-tick[data-on='true'] { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+    .wsp-gate { transition: none; }
+}

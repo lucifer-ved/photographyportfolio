@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FlightContainer, Name, Stage, Tile, Corner, Hint, Credit, CursorRing, CursorDot, CursorLabel } from './FlightElements';
 import FullScreenImage from '../FullScreenImage';
+import WeightSweepPreloader from '../ui/WeightSweepPreloader';
 import { photos } from '../../ImageList';
 
 const COUNT = photos.length;
@@ -58,6 +59,9 @@ const Flight = () => {
     const labelRef = useRef(null);
     const draggedRef = useRef(false);
     const openRef = useRef(false);
+    const beginRef = useRef(null);
+    const [loadProgress, setLoadProgress] = useState(0);
+    const [loading, setLoading] = useState(true);
     const [started, setStarted] = useState(false);
     const [named, setNamed] = useState(false);
     const [travelled, setTravelled] = useState(false);
@@ -180,6 +184,10 @@ const Flight = () => {
         const frame = now => {
             const dt = clamp((now - prev) / 16.67, .2, 3);
             prev = now;
+            if (!begun) {
+                raf = requestAnimationFrame(frame);
+                return;
+            }
             if (!drag.on) {
                 const target = reduced ? 0 : hover ? 5 : CRUISE;
                 v += (target - v) * .035 * dt;
@@ -224,6 +232,7 @@ const Flight = () => {
             v = -dy * 9;
         };
         const onPointerDown = e => {
+            if (!begun) return;
             if (openRef.current) return;
             drag.on = true;
             drag.x = e.clientX;
@@ -234,11 +243,13 @@ const Flight = () => {
         const onPointerLeave = () => { ptr.inside = false; ring.style.opacity = 0; dot.style.opacity = 0; label.style.opacity = 0; };
         const onWheel = e => {
             e.preventDefault();
+            if (!begun) return;
             if (openRef.current) return;
             markTravelled();
             v += (e.deltaY + e.deltaX) * .45;
         };
         const onKeyDown = e => {
+            if (!begun) return;
             if (openRef.current) return;
             if (e.key === 'ArrowUp' || e.key === 'ArrowRight') v += 60;
             else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') v -= 60;
@@ -266,13 +277,12 @@ const Flight = () => {
         };
         const onResize = () => { layout(); place(); };
 
-        // A photo stays hidden until its file has arrived, and the opening waits for
-        // them (briefly), so the flight never starts with empty cards.
-        let begun = false, gate = 0, pending = items.length;
+        // The intro waits for every flight thumbnail to finish loading and decoding.
+        // Failed files remain hidden rather than turning into empty flying cards.
+        let begun = false, settled = 0, cancelled = false;
         const begin = () => {
             if (begun) return;
             begun = true;
-            clearTimeout(gate);
             setStarted(true);
             if (reduced) {
                 showName();
@@ -282,21 +292,29 @@ const Flight = () => {
                 fallback = setTimeout(showName, 5000);
             }
         };
+        beginRef.current = begin;
         items.forEach(t => {
             const img = t.el.firstChild;
-            const done = () => {
-                if (t.ready) return;
-                t.ready = true;
-                if (--pending <= 0) begin();
+            let finished = false;
+            const done = ready => {
+                if (finished || cancelled) return;
+                finished = true;
+                t.ready = ready;
+                settled++;
+                setLoadProgress(Math.round(settled / items.length * 100));
             };
-            const decoded = () => (img.decode ? img.decode().then(done, done) : done());
-            if (img.complete && img.naturalWidth) decoded();
-            else {
+            const decoded = () => {
+                if (img.decode) img.decode().then(() => done(true), () => done(img.naturalWidth > 0));
+                else done(img.naturalWidth > 0);
+            };
+            if (img.complete) {
+                if (img.naturalWidth) decoded();
+                else done(false);
+            } else {
                 img.addEventListener('load', decoded, { once: true });
-                img.addEventListener('error', done, { once: true });
+                img.addEventListener('error', () => done(false), { once: true });
             }
         });
-        gate = setTimeout(begin, 3000);
 
         layout();
         place();
@@ -316,7 +334,8 @@ const Flight = () => {
         return () => {
             cancelAnimationFrame(raf);
             clearTimeout(fallback);
-            clearTimeout(gate);
+            cancelled = true;
+            beginRef.current = null;
             el.removeEventListener('pointerdown', onPointerDown);
             el.removeEventListener('wheel', onWheel);
             stage.removeEventListener('pointerover', onOver);
@@ -398,6 +417,10 @@ const Flight = () => {
             </CursorRing>
             <CursorDot ref={dotRef} aria-hidden="true" />
             <CursorLabel ref={labelRef} aria-hidden="true" />
+            {loading && <WeightSweepPreloader progress={loadProgress} onComplete={() => {
+                beginRef.current?.();
+                setLoading(false);
+            }} />}
         </FlightContainer>
     )
 }

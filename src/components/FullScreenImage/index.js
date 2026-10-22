@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FullScreenContainer, Veil, Frame, Count, IconButton, Caption, Title, Meaning } from './FullScreenElements';
+import ImageLoading from '../ui/ImageLoading';
 
 const pad = n => String(n).padStart(2, '0');
 
@@ -23,21 +24,10 @@ const FullScreenImage = ({ photos, index, from, onChange, onClose }) => {
     const frameRef = useRef(null);
     const imageRef = useRef(null);
     const closeRef = useRef(null);
-    const [src, setSrc] = useState(photo.small);
     const [, setResized] = useState(0);
     const size = fit(photo);
 
     const step = dir => onChange((index + dir + photos.length) % photos.length);
-
-    // Show the light copy straight away, then swap in the screen-sized one once it has loaded.
-    useEffect(() => {
-        let current = true;
-        setSrc(photo.small);
-        const full = new Image();
-        full.onload = () => { if (current) setSrc(photo.large); };
-        full.src = photo.large;
-        return () => { current = false; };
-    }, [photo]);
 
     useEffect(() => {
         const previous = document.activeElement;
@@ -92,7 +82,15 @@ const FullScreenImage = ({ photos, index, from, onChange, onClose }) => {
         >
             <Veil />
             <Frame ref={frameRef} style={{ padding: size.mat }}>
-                <img ref={imageRef} src={src} alt={photo.title} width={size.width} height={size.height} />
+                <ImageLoading
+                    key={photo.small}
+                    imageRef={imageRef}
+                    previewSrc={photo.small}
+                    src={photo.large}
+                    alt={photo.title}
+                    width={size.width}
+                    height={size.height}
+                />
             </Frame>
             <Count>{pad(index + 1)} / {photos.length}</Count>
             <IconButton type="button" data-pos="close" ref={closeRef} aria-label="Close" onClick={onClose}>
